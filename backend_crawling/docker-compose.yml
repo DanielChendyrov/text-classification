@@ -1,0 +1,31 @@
+services:
+  postgres_db:
+    image: postgres:15-alpine
+    container_name: postgres_db
+    environment:
+      POSTGRES_DB: crawl4ai_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+    volumes:
+      - ./db-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  crawl4ai_service:
+    image: unclecode/crawl4ai:all
+    container_name: crawl4ai_service
+    environment:
+      - LLM_PROVIDER=deepseek
+      - DEEPSEEK_API_KEY=your_deepseek_api_key
+    ports:
+      - "8000:8000"
+
+  crawler_app:
+    build: ./crawler
+    container_name: crawler_app
+    volumes:
+      - ./config.json:/app/config.json
+      - ./email_reports:/app/email_reports
+    depends_on:
+      - postgres_db
+      - crawl4ai_service

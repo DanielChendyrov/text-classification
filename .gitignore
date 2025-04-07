@@ -172,3 +172,8 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+/backend_crawling/.idea
+/backend_crawling/.venv
+/backend_crawling/db-data
+/backend_analysis/.idea
