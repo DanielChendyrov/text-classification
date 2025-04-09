@@ -6,5 +6,5 @@
 ## Activate môi trường
 `.\.venv\Scripts\activate`
 
-## Cài đặt dependencies
-`pip install -r .\requirements.txt`
+## Chạy Docker Desktop và chạy container
+`docker-compose up -d`
