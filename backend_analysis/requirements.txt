@@ -1,6 +1,11 @@
-fastapi==0.95.2
+# Các dependencies khác...
+fastapi==0.115.12
 uvicorn==0.22.0
 sqlalchemy==1.4.48
 httpx==0.24.1
 python-dotenv==1.0.0
 psycopg2-binary==2.9.6
+requests-html==0.10.0
+lxml_html_clean==0.4.0
+websockets==10.3
+newspaper3k==0.2.8
