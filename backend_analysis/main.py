@@ -1,22 +1,28 @@
+
+import sys
+import asyncio
+
+if sys.platform.startswith("win"):
+    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+
 from dotenv import load_dotenv
-load_dotenv()  # Load các biến môi trường từ file .env
+load_dotenv()  # Load biến môi trường từ file .env
 
-import os
 from fastapi import FastAPI
-from db.database import init_db, seed_db
 from routers import analysis
+from db.database import init_db
 
-app = FastAPI(title="Backend Analysis API")
+app = FastAPI(title="Backend Analysis API", debug=True)
 
-# Khởi tạo DB và seed dữ liệu giả khi khởi động ứng dụng
 @app.on_event("startup")
-def startup():
+async def startup_event():
+    # Khởi tạo database (và seed dữ liệu nếu cần)
     init_db()
-    seed_db()
 
-# Include router cho các endpoint phân tích
+
+# Include router cho endpoint phân tích
 app.include_router(analysis.router, prefix="/api", tags=["analysis"])
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=False)
