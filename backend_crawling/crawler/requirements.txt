@@ -1,6 +1,0 @@
-requests
-schedule
-psycopg2-binary
-pandas
-python-dotenv
-smtpemail

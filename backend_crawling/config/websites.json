@@ -1,0 +1,20 @@
+{
+  "websites": [
+    {
+      "name": "Dan Tri",
+      "base_url": "https://dantri.com.vn/",
+      "active": true
+    },
+    {
+      "name": "VnExpress",
+      "base_url": "https://vnexpress.net/",
+      "active": true
+    },
+    {
+      "name": "VietnamNet",
+      "base_url": "https://vietnamnet.vn/",
+      "active": true
+    }
+  ],
+  "crawl_interval_minutes": 30
+}
