@@ -95,6 +95,6 @@ The application will run continuously and crawl the configured websites at the s
 
 You can access the API documentation and try out the endpoints at:
 
-```
+```url
 http://localhost:8000/docs
 ```
