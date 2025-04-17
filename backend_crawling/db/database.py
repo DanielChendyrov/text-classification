@@ -24,6 +24,7 @@ class CrawledData(Base):
     crawled_at = Column(DateTime, default=datetime.utcnow)
     is_analyzed = Column(Boolean, default=False)
     analyzed_at = Column(DateTime, nullable=True)
+    analyze_success = Column(Boolean, default=None)  # None=not analyzed, True=success, False=failure
 
 # Create tables
 def init_db():

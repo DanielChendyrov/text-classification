@@ -2,38 +2,16 @@ import newspaper
 import csv
 import time
 from urllib.parse import urldefrag, urlparse
+import os
+import json
 
-# Danh sách 8 website báo chính thống
-NEWS_SITES = [
-    "https://vnexpress.net",
-    "https://tuoitre.vn",
-    "https://thanhnien.vn",
-    "https://vietnamnet.vn",
-    "https://dantri.com.vn",
-    "https://zingnews.vn",
-    "https://plo.vn",  # Pháp Luật Online
-    "https://laodong.vn",
-    "https://nhandan.vn",
-    "https://vtv.vn",
-    "https://baochinhphu.vn",
-    "https://vov.vn",
-    "https://cand.com.vn",
-    "https://qdnd.vn",
-    "https://baophapluat.vn",
-    "https://baogiaothong.vn",
-    "https://nongnghiep.vn",
-    "https://baoxaydung.com.vn",
-    "https://suckhoedoisong.vn",
-    "https://congthuong.vn",
-    "https://daibieunhandan.vn",
-    "https://baodautu.vn",
-    "https://baotintuc.vn",
-    "https://tienphong.vn",
-    "https://kienthuc.net.vn",
-    "https://infonet.vn",
-    "https://vtcnews.vn",
-    "https://nguoiduatin.vn"
-]
+# Load news sites from shared config file
+CONFIG_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "backend_crawling", "config", "websites.json")
+
+def load_sites_from_config():
+    with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+        config = json.load(f)
+    return [site["base_url"] for site in config.get("websites", []) if site.get("active", True)]
 
 MAX_ARTICLES_PER_SITE = 288
 OUTPUT_CSV = "all_titles.csv"
@@ -106,4 +84,5 @@ def save_all_titles(sites, output_csv, max_per_site):
 
 
 if __name__ == "__main__":
-    save_all_titles(NEWS_SITES, OUTPUT_CSV, MAX_ARTICLES_PER_SITE)
+    sites = load_sites_from_config()
+    save_all_titles(sites, OUTPUT_CSV, MAX_ARTICLES_PER_SITE)

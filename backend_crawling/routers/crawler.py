@@ -1,10 +1,10 @@
 import logging
 from fastapi import APIRouter, Depends, BackgroundTasks
 from sqlalchemy.orm import Session
-from datetime import datetime
+from datetime import datetime, timezone
 
-from app.db.database import SessionLocal, CrawledData
-from app.utils.crawler import load_config, crawl_website
+from db.database import SessionLocal, CrawledData
+from utils.crawler import load_config, crawl_website
 
 router = APIRouter()
 
@@ -38,13 +38,13 @@ async def get_status(db: Session = Depends(get_db)):
     """
     total_count = db.query(CrawledData).count()
     today_count = db.query(CrawledData).filter(
-        CrawledData.crawled_at >= datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        CrawledData.crawled_at >= datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
     ).count()
     
     return {
         "total_articles_crawled": total_count,
         "articles_crawled_today": today_count,
-        "last_check": datetime.utcnow()
+        "last_check": datetime.now(timezone.utc)
     }
 
 def crawl_all_websites(db: Session):
@@ -69,7 +69,7 @@ def crawl_all_websites(db: Session):
                         # Create new entry
                         new_entry = CrawledData(
                             url=url,
-                            crawled_at=datetime.utcnow(),
+                            crawled_at=datetime.now(timezone.utc),
                             is_analyzed=False
                         )
                         db.add(new_entry)
