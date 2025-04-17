@@ -1,13 +1,38 @@
 import newspaper
 import csv
 import time
-from urllib.parse import urlparse
+from urllib.parse import urldefrag, urlparse
 
 # Danh sách 8 website báo chính thống
 NEWS_SITES = [
     "https://vnexpress.net",
     "https://tuoitre.vn",
-    "https://vtv.vn"
+    "https://thanhnien.vn",
+    "https://vietnamnet.vn",
+    "https://dantri.com.vn",
+    "https://zingnews.vn",
+    "https://plo.vn",  # Pháp Luật Online
+    "https://laodong.vn",
+    "https://nhandan.vn",
+    "https://vtv.vn",
+    "https://baochinhphu.vn",
+    "https://vov.vn",
+    "https://cand.com.vn",
+    "https://qdnd.vn",
+    "https://baophapluat.vn",
+    "https://baogiaothong.vn",
+    "https://nongnghiep.vn",
+    "https://baoxaydung.com.vn",
+    "https://suckhoedoisong.vn",
+    "https://congthuong.vn",
+    "https://daibieunhandan.vn",
+    "https://baodautu.vn",
+    "https://baotintuc.vn",
+    "https://tienphong.vn",
+    "https://kienthuc.net.vn",
+    "https://infonet.vn",
+    "https://vtcnews.vn",
+    "https://nguoiduatin.vn"
 ]
 
 MAX_ARTICLES_PER_SITE = 288
@@ -16,47 +41,53 @@ MIN_WORD_COUNT = 50  # ngưỡng từ tối thiểu để coi là bài báo
 
 
 def is_article(article, min_word_count=MIN_WORD_COUNT):
-    """
-    Trả về True nếu article có vẻ là bài báo thật.
-    """
-    # 1. Kiểm tra og:type
     og = article.meta_data.get('og', {})
     if og.get('type') == 'article':
         return True
-
-    # # 2. Kiểm tra URL kết thúc bằng .html
-    # parsed = urlparse(article.url)
+    parsed = urlparse(article.url)
     # if parsed.path.endswith('.html'):
     #     return True
-
-    # 3. Kiểm tra độ dài nội dung
     text = article.text or ""
     if len(text.split()) >= min_word_count:
         return True
-
-    # Nếu cả 3 đều không đạt -> không phải bài báo
     return False
 
 
 def crawl_titles(url, language='vi', max_articles=288):
     news_site = newspaper.build(url, language=language, memoize_articles=False)
-    articles = news_site.articles[:max_articles]
+    # Dùng set để track URLs đã xử lý (không tính fragment)
+    seen = set()
 
+    # Chỉ lấy 288 link đầu
+    candidates = news_site.articles[:max_articles]
     titles = []
-    print(f"[{url}] Tổng liên kết tìm được: {len(news_site.articles)} – sẽ thử crawl {len(articles)} bài")
+    print(f"[{url}] Tổng liên kết tìm được: {len(news_site.articles)} – sẽ thử crawl {len(candidates)} bài")
 
-    for idx, article in enumerate(articles, start=1):
+    for idx, article in enumerate(candidates, start=1):
+        # 1. Loại bỏ fragment (#...) để normalize URL
+        norm_url, _ = urldefrag(article.url)
+        if norm_url in seen:
+            # đã crawl url này rồi
+            print(f"  ↳ Bỏ qua (duplicate): {article.url}")
+            continue
+        seen.add(norm_url)
+        # gán lại article.url để các bước tiếp theo dùng URL chuẩn
+        article.url = norm_url
+
+        # 2. Download & parse
         try:
             article.download()
             article.parse()
-            # chỉ lưu nếu là bài báo
+            # 3. Chỉ lưu nếu đúng là bài báo
             if article.title and is_article(article):
                 titles.append(article.title.strip())
             else:
-                print(f"  ↳ Bỏ qua (không phải bài báo) URL: {article.url}")
+                print(f"  ↳ Bỏ qua (không phải bài báo): {article.url}")
         except Exception as e:
             print(f"Lỗi tại bài {idx} ({url}): {e}")
+
         time.sleep(0.1)
+
     return titles
 
 
