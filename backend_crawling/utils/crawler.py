@@ -4,7 +4,7 @@ import os
 import re
 from datetime import datetime, timezone
 from typing import List, Dict, Any
-from ..db.database import SessionLocal  # Adjusted import path to match relative structure
+from db.database import SessionLocal  # Adjusted import path to match relative structure
 
 import requests
 from bs4 import BeautifulSoup
