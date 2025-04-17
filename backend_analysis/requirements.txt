@@ -10,3 +10,7 @@ lxml_html_clean==0.4.0
 websockets==10.3
 newspaper3k==0.2.8
 apscheduler==3.10.1
+huggingface_hub
+transformers
+pyvi
+torch
