@@ -2,8 +2,9 @@ import json
 import logging
 import os
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Dict, Any
+from ..db.database import SessionLocal  # Adjusted import path to match relative structure
 
 import requests
 from bs4 import BeautifulSoup
@@ -16,18 +17,16 @@ logging.basicConfig(
 )
 logger = logging.getLogger("crawler")
 
-CONFIG_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "config", "websites.json")
+CONFIG_PATH = os.path.abspath(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "config", "websites.json"))
 
 def load_config() -> Dict[str, Any]:
     """Load the configuration from the JSON file"""
     try:
         with open(CONFIG_PATH, "r", encoding="utf-8") as f:
-            config = json.load(f)
-        logger.info(f"Loaded config with {len(config['websites'])} websites")
-        return config
+            return json.load(f)
     except Exception as e:
-        logger.error(f"Error loading config: {e}")
-        raise
+        logger.error(f"[Config] Error loading config: {e}")
+        return {"websites": [], "crawl_interval_minutes": 30}
 
 def is_article_url(url: str) -> bool:
     """Check if the URL is likely an article URL based on patterns"""
@@ -100,3 +99,15 @@ def crawl_website(base_url: str) -> List[str]:
     except Exception as e:
         logger.error(f"Error crawling {base_url}: {e}")
         return []
+
+def scheduled_crawling():
+    logger.info(f"Starting scheduled crawling at {datetime.now(timezone.utc)}")
+    db = SessionLocal()
+    try:
+        config = load_config()
+        # ...existing code...
+    except Exception as e:
+        logger.error(f"Error during scheduled crawling: {e}")
+        db.rollback()
+    finally:
+        db.close()
