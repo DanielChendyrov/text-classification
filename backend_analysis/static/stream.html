@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Tiến trình phân tích tiêu đề</title>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; }
+    h1 { margin-bottom: 1rem; }
+    #status-list { list-style: none; padding: 0; }
+    #status-list li {
+      padding: .5rem;
+      border: 1px solid #ddd;
+      margin-bottom: .5rem;
+      border-radius: 4px;
+    }
+    .url { font-weight: bold; }
+    .title { font-style: italic; }
+    .sentiment { color: #007ACC; }
+  </style>
+</head>
+<body>
+  <h1>Tiến trình phân tích cảm xúc tiêu đề</h1>
+  <ul id="status-list"></ul>
+
+  <script>
+    const list = document.getElementById('status-list');
+    const evt = new EventSource('/api/title/analyze/stream');
+
+    evt.onmessage = e => {
+      try {
+        const { url, title, sentiment } = JSON.parse(e.data);
+        const li = document.createElement('li');
+        li.innerHTML =
+          `<div class="url">URL: ${url}</div>` +
+          `<div class="title">Tiêu đề: ${title}</div>` +
+          `<div class="sentiment">Sentiment: ${sentiment}</div>`;
+        list.appendChild(li);
+      } catch(err) {
+        console.error('Parse SSE data error', err);
+      }
+    };
+
+    evt.onerror = () => {
+      const li = document.createElement('li');
+      li.textContent = 'Đã có lỗi kết nối hoặc đã kết thúc stream.';
+      list.appendChild(li);
+      evt.close();
+    };
+  </script>
+</body>
+</html>
