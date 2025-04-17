@@ -19,6 +19,8 @@ class CrawledData(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     url = Column(String, unique=True, index=True)
+    title = Column(String, nullable=True)
+    title_sentiment = Column(String, nullable=True)
     contents = Column(String, nullable=True)
     analysis = Column(String, nullable=True)
     crawled_at = Column(DateTime, default=datetime.utcnow)
