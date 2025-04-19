@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tiến trình phân tích cảm xúc tiêu đề</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Montserrat:wght@700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f4f4f9;
+      margin: 0;
+      padding: 1.5rem;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 1200px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-auto-rows: minmax(280px, auto);
+      gap: 1rem;
+      height: calc(100vh - 3rem);
+      overflow: hidden;
+      margin: 0 auto;
+    }
+    .card {
+      background-color: #fff;
+      border: none;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      animation: slideIn 0.3s ease-out;
+      position: relative;
+      overflow: visible;
+    }
+    @keyframes slideIn {
+      from { transform: translateX(-20px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    .card-content {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .url-section, .title-section, .timestamp-section {
+      padding: 0.75rem;
+      border-radius: 4px;
+      border: 1px solid #e0e0e0;
+    }
+    .url-section {
+      background-color: #e8f0fe;
+    }
+    .title-section {
+      background-color: #f5f5f5;
+    }
+    .timestamp-section {
+      background-color: #e0f7fa;
+    }
+    .url a {
+      color: #1a73e8;
+      text-decoration: none;
+      display: block;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+      font-size: 0.9rem;
+    }
+    .url a:hover {
+      text-decoration: underline;
+    }
+    .title {
+      color: #333;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin: 0;
+    }
+    .timestamp {
+      font-size: 0.85rem;
+      color: #757575;
+    }
+    .sentiment-badge {
+      position: absolute;
+      top: -0.5rem;
+      right: -0.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      transform: rotate(-10deg);
+      box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+      opacity: 0;
+      animation: fadeInBadge 0.3s ease-out forwards;
+      animation-delay: 0.5s;
+    }
+    @keyframes fadeInBadge {
+      to { opacity: 1; }
+    }
+    .sentiment-badge.pos {
+      background-color: #2e7d32;
+      color: #fff;
+    }
+    .sentiment-badge.neg {
+      background-color: #d32f2f;
+      color: #fff;
+    }
+    .sentiment-badge.neu {
+      background-color: #616161;
+      color: #fff;
+    }
+    #error-message {
+      text-align: center;
+      color: #d32f2f;
+      font-size: 0.9rem;
+      margin-top: 1rem;
+      position: fixed;
+      bottom: 1rem;
+      width: 100%;
+    }
+    @media (max-width: 768px) {
+      .container {
+        grid-template-columns: 1fr;
+        grid-auto-rows: minmax(220px, auto);
+      }
+      .sentiment-badge {
+        top: 0.5rem;
+        right: 0.5rem;
+        transform: rotate(0);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="status-list">
+    <!-- Cards will be dynamically added here -->
+  </div>
+  <div id="error-message"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const container = document.getElementById('status-list');
+    const errorMessage = document.getElementById('error-message');
+    const evt = new EventSource('/api/title/analyze/stream');
+    const maxCards = 9; // 3 columns x 3 rows, adjustable to 6 for 2 rows
+
+    function scrollToTop() {
+      container.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function shortenUrl(url, maxLength = 50) {
+      if (url.length <= maxLength) return url;
+      return url.substring(0, maxLength - 3) + '...';
+    }
+
+    evt.onmessage = e => {
+      try {
+        const { url, title, sentiment } = JSON.parse(e.data);
+        const now = new Date().toLocaleTimeString('vi-VN');
+        const shortUrl = shortenUrl(url);
+        const sentimentClass = sentiment.toLowerCase().slice(0, 3); // pos, neg, neu
+        const card = document.createElement('div');
+        card.classList.add('card');
+        card.innerHTML = `
+          <div class="card-content">
+            <div class="url-section">
+              <div class="url"><a href="${url}" target="_blank">${shortUrl}</a></div>
+            </div>
+            <div class="title-section">
+              <div class="title">${title}</div>
+            </div>
+            <div class="timestamp-section">
+              <div class="timestamp">${now}</div>
+            </div>
+          </div>
+          <div class="sentiment-badge ${sentimentClass}">${sentimentClass.toUpperCase()}</div>
+        `;
+        container.insertBefore(card, container.firstChild);
+
+        // Remove excess cards
+        const cards = container.querySelectorAll('.card');
+        if (cards.length > maxCards) {
+          cards[cards.length - 1].remove();
+        }
+
+        // Scroll to top if at max cards
+        if (cards.length >= maxCards) {
+          scrollToTop();
+        }
+      } catch (err) {
+        console.error('Parse SSE data error', err);
+        errorMessage.textContent = 'Đã xảy ra lỗi khi xử lý dữ liệu.';
+      }
+    };
+
+    evt.onerror = () => {
+      errorMessage.textContent = 'Đã có lỗi kết nối hoặc đã kết thúc stream.';
+      evt.close();
+    };
+  </script>
+</body>
+</html>
